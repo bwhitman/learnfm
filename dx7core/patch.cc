@@ -15,6 +15,7 @@
  */
 
 #include <cstring>
+#include <stdio.h>
 #include "patch.h"
 
 void UnpackPatch(const char bulk[128], char patch[156]) {
@@ -47,49 +48,53 @@ void UnpackPatch(const char bulk[128], char patch[156]) {
 	patch[143] = lpms_lfw_lks >> 4;
 	memcpy(patch + 144, bulk + 117, 11);  // transpose, name
 	patch[155] = 0x3f;  // operator on/off
+
+	// Confirm the parameters are within range
+	CheckPatch(patch);
+
 }
+int clamped =0 ;
+int file_clamped =0 ;
+extern int pos_count[156];
 
 char clamp(char byte, int pos, char max) {
 	if(byte > max || byte < 0) {
+		clamped++;
+		pos_count[pos]++;
+		//printf("file %d clamped %d pos %d was %d is %d\n", file_clamped, clamped, pos, byte, max);
 		return max;
 	}
 	return byte;
 }
+
+// Helpful, from
+// http://homepages.abdn.ac.uk/d.j.benson/dx7/sysex-format.txt
+// Note, 1% of my downloaded voices go well outside these ranges . 
+// a TODO is check what happens when we slightly go outside 
+
+char max[] = {
+	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,	// osc6
+	3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, // osc5
+	3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, // osc4
+	3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, // osc3
+	3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, // osc2
+	3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, // osc1
+	3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+
+	99, 99, 99, 99, 99, 99, 99, 99, // pitch eg rate & level 
+	31, 7, 1, 99, 99, 99, 99, 1, 5, 7, 48, // algorithm etc
+	126, 126, 126, 126, 126, 126, 126, 126, 126, 126 // name
+};
+
 void CheckPatch(char patch[156]) {
-	int pos = 0;
-	for(int op=0;op<6;op++) {
-		for(int k=0;k<11;k++) {
-			patch[pos] = clamp(patch[pos], pos, 99); pos++;
-		}
-		patch[pos] = clamp(patch[pos], pos, 3); pos++;
-		patch[pos] = clamp(patch[pos], pos, 3); pos++;
-		patch[pos] = clamp(patch[pos], pos, 7); pos++;
-		patch[pos] = clamp(patch[pos], pos, 3); pos++;
-		patch[pos] = clamp(patch[pos], pos, 7); pos++;
-		patch[pos] = clamp(patch[pos], pos, 99); pos++;
-		patch[pos] = clamp(patch[pos], pos, 1); pos++;
-		patch[pos] = clamp(patch[pos], pos, 31); pos++;
-		patch[pos] = clamp(patch[pos], pos, 99); pos++;
-		patch[pos] = clamp(patch[pos], pos, 14); pos++;
+	for(int i=0;i<155;i++) {
+		patch[i] = clamp(patch[i], i, max[i]);
 	}
-	for(int k=0;k<8;k++) {
-		patch[pos] = clamp(patch[pos], pos, 99); pos++;
-	}
-	patch[pos] = clamp(patch[pos], pos, 31); pos++;
-	patch[pos] = clamp(patch[pos], pos, 7); pos++;
-	patch[pos] = clamp(patch[pos], pos, 1); pos++;
-	patch[pos] = clamp(patch[pos], pos, 99); pos++;
-	patch[pos] = clamp(patch[pos], pos, 99); pos++;
-	patch[pos] = clamp(patch[pos], pos, 99); pos++;
-	patch[pos] = clamp(patch[pos], pos, 99); pos++;
-
-	patch[pos] = clamp(patch[pos], pos, 1); pos++;
-	patch[pos] = clamp(patch[pos], pos, 5); pos++;
-	patch[pos] = clamp(patch[pos], pos, 7); pos++;
-	patch[pos] = clamp(patch[pos], pos, 48); pos++;
-
-	for(int k=0;k<10;k++) {
-		patch[pos] = clamp(patch[pos], pos, 126); pos++;
-	}
-
+	if(clamped) file_clamped++;
+	clamped = 0;
 }

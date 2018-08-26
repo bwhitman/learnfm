@@ -1,16 +1,8 @@
 # learnfm
 
 
-Download the DX7 sysex patches from http://dxsysex.com/ and put them in a folder called `patches/`
-```
-python dx7db.py
-```
+## Build the Python & C simulator
 
-Will create a database called `compact.bin` and `names.txt` with all of the unique voices from all the banks in the patches (I count 31,380.) 
-The unique-finding-algorithm looks at the data in the voice, not the name. Many voices have different names but the same voice information.
-
-
-Then, to generate sounds, do
 ```
 cd dx7core
 make
@@ -30,3 +22,14 @@ The python module renders a mono 44,100Hz 16-bit signed int sound from a patch n
 >>> keyup_sample = 44100 * 5 # when to let the key up
 >>> data = dx7.render(patch_number, midi_note, velocity, samples, keyup_sample)
 ```
+
+## Creating your own database
+
+If you want your own patch database, download DX7 sysex patches (I used http://dxsysex.com/ ) and put them in a folder called `patches/`. Then run 
+
+```
+python dx7db.py
+```
+
+Will create a database called `compact.bin` and `names.txt` with all of the unique voices from all the banks in the patches (I have 31,380.) 
+The unique-finding-algorithm looks at the data in the voice, not the name. Many voices have different names but the same voice information.

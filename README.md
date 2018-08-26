@@ -9,9 +9,7 @@ make
 ./dx7 # a test, will create /tmp/foo.wav with all the patches in order if you want
 ```
 
-It will sound like
-
-<iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/490177992&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
+It will sound like https://soundcloud.com/bwhitman/the-31380-unique-voices-of-the-dx7
 
 
 To build the python module, first edit the end of pydx7.cc with your location of `compact.bin` (I will fix this soon, sorry)

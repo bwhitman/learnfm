@@ -227,7 +227,6 @@ char epiano[] = {
   32
 };
 extern int file_clamped;
-int pos_count[156];
 
 void mkdx7note(double sample_rate) {
   const int n_samples = 10 * 1024 ;
@@ -240,7 +239,6 @@ void mkdx7note(double sample_rate) {
   fseek(f,0,SEEK_SET);
   fread(all_patches, 1, fsize, f);
   fclose(f);
-  for(int i=0;i<156;i++) pos_count[i]= 0;
   int patches = fsize / 128;
   printf("%d patches\n", patches);
   char *unpacked_patches = (char*) malloc(patches*156);
@@ -248,7 +246,6 @@ void mkdx7note(double sample_rate) {
     UnpackPatch(all_patches + (i*128), unpacked_patches + (i*156));
   }
   printf("%d had to be clamped\n", file_clamped);
-  for(int i=0;i<156;i++) { printf("pos %d count %d\n", i, pos_count[i]); }
   WavOut w("/tmp/foo.wav", sample_rate, n_samples*patches);
 
   for(int patchy = 0;patchy<patches;patchy++) {

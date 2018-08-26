@@ -14,7 +14,7 @@ def get_all_syx_files():
 
 # Pull the name and voice out of a 128 byte buffer, and compute a hash of just the parameters
 def parse_128b(buf):
-    name = bytearray(buf[118:128])
+    name = buf[118:128]
     digest = hashlib.md5(buf[:118]).hexdigest()
     return (buf, name, digest)
 
@@ -46,7 +46,7 @@ def parse_all():
     cant = 0
     dedup = {}
     for i,f in enumerate(all_files):
-        data = open(f, 'rb').read()
+        data = bytearray(open(f, 'rb').read())
         if(len(data) == 4104):
             p = parse_4104b(data)
         elif(len(data) == 4096):

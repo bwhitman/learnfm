@@ -55,12 +55,10 @@ void UnpackPatch(const char bulk[128], char patch[156]) {
 }
 int clamped =0 ;
 int file_clamped =0 ;
-extern int pos_count[156];
 
 char clamp(char byte, int pos, char max) {
 	if(byte > max || byte < 0) {
 		clamped++;
-		pos_count[pos]++;
 		//printf("file %d clamped %d pos %d was %d is %d\n", file_clamped, clamped, pos, byte, max);
 		return max;
 	}

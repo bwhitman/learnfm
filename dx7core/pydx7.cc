@@ -30,13 +30,10 @@ void write_data(const int32_t *buf_in, short * buf_out, unsigned int * pos, int 
                                                 (val + delta) >> 9);
     delta = (delta + val) & 0x1ff;
     buf_out[*pos + i] = clip_val; 
-    //buf_out[*pos + (i * 2)] = clip_val & 0xff;
-    //buf_out[*pos + (i * 2 + 1)] = (clip_val >> 8) & 0xff;
   }
   *pos = *pos + n;
 }
 
-//
 // take in a patch #, a note # and a velocity and a sample length and a sample # to lift off a key?
 short * render(unsigned short patch, unsigned char midinote, unsigned char velocity, unsigned int samples, unsigned int keyup) {
   Dx7Note note;
@@ -72,30 +69,6 @@ void init_synth(void) {
   Log2::init();
 }
 
-
-char * hello(char * what) {
-  char * result = (char*)malloc(sizeof(char)*strlen(what)+1);
-  strcpy(result, what);
-  result[0] = 'A';
-  return result;
-}
-
-static PyObject * hello_wrapper(PyObject * self, PyObject * args)
-{
-  char * input;
-  char * result;
-  PyObject * ret;
-
-  if (!PyArg_ParseTuple(args, "s", &input)) {
-    return NULL;
-  }
-  result = hello(input);
-  ret = PyString_FromString(result);
-  free(result);
-  return ret;
-}
-
-
 static PyObject * render_wrapper(PyObject *self, PyObject *args) {
   int arg1, arg2, arg3, arg4, arg5;
 
@@ -114,11 +87,8 @@ static PyObject * render_wrapper(PyObject *self, PyObject *args) {
   free(result);
   return ret;
 }
-//
-//
 
 static PyMethodDef DX7Methods[] = {
- { "hello", hello_wrapper, METH_VARARGS, "Say hello" },
  {"render", render_wrapper, METH_VARARGS, "Render audio"},
  { NULL, NULL, 0, NULL }
 };
@@ -143,7 +113,6 @@ DL_EXPORT(void) initdx7(void)
     UnpackPatch(all_patches + (i*128), unpacked_patches + (i*156));
   }
   init_synth();
-  //printf("%d had to be clamped\n", file_clamped);
   free(all_patches);
 }
 }

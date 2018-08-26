@@ -7,7 +7,12 @@
 cd dx7core
 make
 ./dx7 # a test, will create /tmp/foo.wav with all the patches in order if you want
+```
 
+To build the python module, first edit the end of pydx7.cc with your location of `compact.bin` (I will fix this soon, sorry)
+Then:
+
+```
 python setup.py install # will create a python module called dx7
 ```
 

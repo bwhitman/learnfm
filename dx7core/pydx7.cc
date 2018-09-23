@@ -1,6 +1,6 @@
 
 #include <Python.h>
-#include <iostream>
+//#include <iostream>
 #include <cstdlib>
 #include <math.h>
 #include "synth.h"
@@ -93,9 +93,23 @@ static PyObject * render_wrapper(PyObject *self, PyObject *args) {
   free(result);
   return ret;
 }
+// return one patch unpacked for sysex
+static PyObject * unpack_wrapper(PyObject *self, PyObject *args) {
+  int arg1 = 8; // patch #
+  if (! PyArg_ParseTuple(args, "i", &arg1)) {
+    return NULL;
+  }
+  PyObject* ret = PyList_New(155); 
+  for (int i = 0; i < 155; i++) {
+    PyObject* python_int = Py_BuildValue("i", unpacked_patches[arg1*156 + i]);
+    PyList_SetItem(ret, i, python_int);    
+  }
+  return ret;
+}
 
 static PyMethodDef DX7Methods[] = {
  {"render", render_wrapper, METH_VARARGS, "Render audio"},
+ {"unpack", unpack_wrapper, METH_VARARGS, "Unpack patch"},
  { NULL, NULL, 0, NULL }
 };
 

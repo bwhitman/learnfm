@@ -1,6 +1,7 @@
 # Takes a directory full of DX7 sysex patches and outputs a compacted unique list of voices
 import os, sys, hashlib
 
+import mido
 
 # I got this by paying $2 for https://gumroad.com/dxsysex
 def get_all_syx_files():
@@ -38,6 +39,38 @@ def parse_8208b(buf):
 
 # There's many other types in the dataset but the counts per type are too low to worry about
 
+
+
+def checksum(patch_data):
+    # https://yamahamusicians.com/forum/viewtopic.php?t=6864
+    return ~sum(patch_data) + 1 & 0x7F
+
+def sysex_message(patch_number, channel):
+    import dx7
+    # docs say MSB is 1, but i don't know why, shouldn't it be 0?
+    byte_count = 155
+    msb = byte_count / 127
+    lsb = (byte_count % 127) - 1
+    message = [0x43, channel, 0, msb, lsb]
+    patch_data = dx7.unpack(patch_number)
+    check = checksum(patch_data)
+    message = message + patch_data
+    message = message + [check]
+    return message
+
+_port = mido.open_output()
+def update_voice(patch_number, channel):
+    sysex = sysex_message(patch_number, channel)
+    msg = mido.Message('sysex', data=sysex)
+    _port.send(program)
+    _port.send(msg)
+
+def play_note(note, channel):
+    msg = mido.Message('note_on', note=note, channel=channel)
+    _port.send(msg)
+def stop_note(note,channel):
+    msg = mido.Message('note_on',note=note, channel = channel, velocity=0)
+    _port.send(msg)
 
 def parse_all():
     all_files = get_all_syx_files()

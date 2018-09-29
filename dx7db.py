@@ -41,22 +41,20 @@ def parse_8208b(buf):
 
 
 
-def checksum(patch_data):
-    # https://yamahamusicians.com/forum/viewtopic.php?t=6864
-    return ~sum(patch_data) + 1 & 0x7F
-
 def sysex_message(patch_number, channel):
     import dx7
-    # docs say MSB is 1, but i don't know why, shouldn't it be 0?
-    byte_count = 155
+    # get the 155 bytes for the patch number from the C extension
+    patch_data = dx7.unpack(patch_number)
+    # generate the twos complement checksum for the patch data 
+    # from these dudes fighting w/ each other about who has the best programming skills sigh 
+    # https://yamahamusicians.com/forum/viewtopic.php?t=6864
+    check = ~sum(patch_data) + 1 & 0x7F
+
+    # Generate the sysex message
+    byte_count = 155 # always 155 bytes of patch information (the operator-on message is only for live mode)
     msb = byte_count / 127
     lsb = (byte_count % 127) - 1
-    message = [0x43, channel, 0, msb, lsb]
-    patch_data = dx7.unpack(patch_number)
-    check = checksum(patch_data)
-    message = message + patch_data
-    message = message + [check]
-    return message
+    return [0x43, channel, 0, msb, lsb] + patch_data + [check]
 
 _port = mido.open_output()
 def update_voice(patch_number, channel):

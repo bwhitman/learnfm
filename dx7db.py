@@ -60,14 +60,14 @@ _port = mido.open_output()
 def update_voice(patch_number, channel):
     sysex = sysex_message(patch_number, channel)
     msg = mido.Message('sysex', data=sysex)
-    _port.send(program)
+    #_port.send(program)
     _port.send(msg)
 
 def play_note(note, channel):
     msg = mido.Message('note_on', note=note, channel=channel)
     _port.send(msg)
 def stop_note(note,channel):
-    msg = mido.Message('note_on',note=note, channel = channel, velocity=0)
+    msg = mido.Message('note_off',note=note, channel = channel, velocity=0)
     _port.send(msg)
 
 def parse_all():

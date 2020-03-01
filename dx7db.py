@@ -91,6 +91,75 @@ def parse_all():
             dedup[patch[2]] = patch
     return dedup
 
+def unpack_packed_patch(p):
+    # Input is a 128 byte thing from compact.bin
+    # Output is a 156 byte thing that the synth knows about
+    # Todo, could just bake the unpacked patches in a new .bin file and move this code to dx7...
+    o = [0]*156
+    for op in xrange(6):
+        o[op*21:op*21 + 11] = p[op*17:op*17+11]
+        leftrightcurves = p[op*17+11]
+        o[op * 21 + 11] = leftrightcurves & 3
+        o[op * 21 + 12] = (leftrightcurves >> 2) & 3
+        detune_rs = p[op * 17 + 12]
+        o[op * 21 + 13] = detune_rs & 7
+        o[op * 21 + 20] = detune_rs >> 3
+        kvs_ams = p[op * 17 + 13]
+        o[op * 21 + 14] = kvs_ams & 3
+        o[op * 21 + 15] = kvs_ams >> 2
+        o[op * 21 + 16] = p[op * 17 + 14]
+        fcoarse_mode = p[op * 17 + 15]
+        o[op * 21 + 17] = fcoarse_mode & 1
+        o[op * 21 + 18] = fcoarse_mode >> 1
+        o[op * 21 + 19] = p[op * 17 + 16]
+    
+    o[126:126+9] = p[102:102+9]
+    oks_fb = p[111]
+    o[135] = oks_fb & 7
+    o[136] = oks_fb >> 3
+    o[137:137+4] = p[112:112+4]
+    lpms_lfw_lks = p[116]
+    o[141] = lpms_lfw_lks & 1
+    o[142] = (lpms_lfw_lks >> 1) & 7
+    o[143] = lpms_lfw_lks >> 4
+    o[144:144+11] = p[117:117+11]
+    o[155] = 0x3f
+
+    # Clamp the unpacked patches to a known max. 
+    maxes =  [
+        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, # osc6
+        3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, # osc5
+        3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, # osc4
+        3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, # osc3
+        3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, # osc2
+        3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, # osc1
+        3, 3, 7, 3, 7, 99, 1, 31, 99, 14,
+        99, 99, 99, 99, 99, 99, 99, 99, # pitch eg rate & level 
+        31, 7, 1, 99, 99, 99, 99, 1, 5, 7, 48, # algorithm etc
+        126, 126, 126, 126, 126, 126, 126, 126, 126, 126, # name
+        127 # operator on/off
+    ]
+    for i in xrange(156):
+        if(o[i] > maxes[i]): o[i] = maxes[i]
+        if(o[i] < 0): o[i] = 0
+    return o
+
+def convert_compact_to_unpacked():
+    # Take a compact.bin and make it unpacked.bin
+    f = bytearray(open("compact.bin").read())
+    o = open("unpacked.bin", "w")
+    num_patches = len(f)/128
+    for patch in xrange(num_patches):
+        patch_data = f[patch*128:patch*128+128]
+        unpacked = unpack_packed_patch(patch_data)
+        o.write(bytearray(unpacked))
+    o.close()
+
 # Writes all the voices to a binary file of 128 x patches, and also the names in ASCII to a txt file.
 def main():
     compact = open("compact.bin", "wb")

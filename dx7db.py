@@ -94,7 +94,6 @@ def parse_all():
 def unpack_packed_patch(p):
     # Input is a 128 byte thing from compact.bin
     # Output is a 156 byte thing that the synth knows about
-    # Todo, could just bake the unpacked patches in a new .bin file and move this code to dx7...
     o = [0]*156
     for op in xrange(6):
         o[op*21:op*21 + 11] = p[op*17:op*17+11]

@@ -17,6 +17,7 @@
 #ifdef VERBOSE
 #include <iostream>
 #endif
+#include <stddef.h>
 
 #include "synth.h"
 #include "fm_op_kernel.h"

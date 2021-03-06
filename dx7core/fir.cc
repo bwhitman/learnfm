@@ -18,6 +18,7 @@
 
 #include <stdio.h> // for debugging, remove
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "aligned_buf.h"
 #include "fir.h"

@@ -15,6 +15,7 @@
  */
 
 // Create a WAV file
+#include <stdint.h>
 
 #include "wavout.h"
 

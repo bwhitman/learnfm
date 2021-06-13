@@ -113,11 +113,18 @@ static PyMethodDef DX7Methods[] = {
  { NULL, NULL, 0, NULL }
 };
 
+static struct PyModuleDef dx7Def =
+{
+    PyModuleDef_HEAD_INIT,
+    "dx7", /* name of module */
+    "",          /* module documentation, may be NULL */
+    -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    DX7Methods
+};
 
 extern "C" {
-DL_EXPORT(void) initdx7(void)
+PyMODINIT_FUNC PyInit_dx7(void)
 {
-  Py_InitModule("dx7", DX7Methods);
   // TODO: this file should go into the package directory from setup.py, but that is a PITA 
   FILE *f = fopen("/Users/bwhitman/outside/learnfm/compact.bin","rb");
   // See how many voices are in the file
@@ -138,6 +145,7 @@ DL_EXPORT(void) initdx7(void)
   // Have to call this out as we're in C extern 
   init_synth();
   free(all_patches);
+  return PyModule_Create(&dx7Def);
 }
 }
 

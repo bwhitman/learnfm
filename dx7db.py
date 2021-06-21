@@ -1,9 +1,9 @@
 # Takes a directory full of DX7 sysex patches and outputs a compacted unique list of voices
 import os, sys, hashlib
 
-import mido
+from slugify import slugify
 
-# I got this by paying $2 for https://gumroad.com/dxsysex
+
 def get_all_syx_files():
     sysexs = []
     for path, directories, files in os.walk('patches'):
@@ -56,7 +56,7 @@ def sysex_message(patch_number, channel):
     lsb = (byte_count % 127) - 1
     return [0x43, channel, 0, msb, lsb] + patch_data + [check]
 
-_port = mido.open_output()
+#_port = mido.open_output()
 def update_voice(patch_number, channel):
     sysex = sysex_message(patch_number, channel)
     msg = mido.Message('sysex', data=sysex)
@@ -86,9 +86,9 @@ def parse_all():
             p = parse_8208b(data)
         else:
             cant = cant + 1
-        for patch in p:
+        for j, patch in enumerate(p):
             total = total + 1
-            dedup[patch[2]] = patch
+            dedup[patch[2]] = (patch, f, j)
     return dedup
 
 def unpack_packed_patch(p):
@@ -164,13 +164,17 @@ def main():
     compact = open("compact.bin", "wb")
     names = open("names.txt", "w")
     dedup = parse_all()
-    for r in dedup.items():
-        compact.write(r[1][0])
-        name = r[1][1] # the name will be the first name of this voice we saw
+    for r, f, num in dedup.values():
+        compact.write(r[0])
+        name = r[1] # the name will be the first name of this voice we saw
         for i,char in enumerate(name):
             # Make sure the name is actually ASCII printable
             if(char < 32): name[i] = ' '
             if(char > 126): name[i] = ' '
+        # Keep the original filename and patch number
+        # in addition to the "internal" name of the patch
+        # which might have duplicate
+        name = slugify("%s-%02d-%s" % (f, num, name), lowercase=False)
         names.write(name)
         names.write('\n')
     compact.close()

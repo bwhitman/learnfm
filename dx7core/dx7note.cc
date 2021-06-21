@@ -18,6 +18,7 @@
 #include <iostream>
 #endif
 #include <math.h>
+#include <cstddef>
 #include "synth.h"
 #include "freqlut.h"
 #include "patch.h"

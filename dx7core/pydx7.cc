@@ -126,7 +126,7 @@ extern "C" {
 PyMODINIT_FUNC PyInit_dx7(void)
 {
   // TODO: this file should go into the package directory from setup.py, but that is a PITA 
-  FILE *f = fopen("/Users/bwhitman/outside/learnfm/compact.bin","rb");
+  FILE *f = fopen("/Users/joseph/dev/learnfm/compact.bin","rb");
   // See how many voices are in the file
   fseek(f, 0, SEEK_END);
   long fsize = ftell(f);

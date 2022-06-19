@@ -60,6 +60,32 @@ short * render(unsigned short patch, unsigned char midinote, unsigned char veloc
   return out;
 }
 
+// Render but with 156 bytes of patch data
+short * render_patchdata(char* patch_data, unsigned char midinote, unsigned char velocity, unsigned int samples, unsigned int keyup) {
+  Dx7Note note;
+  short * out = (short *) malloc(sizeof(short) * samples);
+  unsigned int out_ptr = 0;
+  note.init(patch_data, midinote, velocity);
+  Controllers controllers;
+  controllers.values_[kControllerPitch] = 0x2000;
+  int32_t buf[N];
+
+  for (int i = 0; i < samples; i += N) {
+    for (int j = 0; j < N; j++) {
+      buf[j] = 0;
+    }
+    if (i >= keyup) {
+      note.keyup();
+    }
+    note.compute(buf, 0, 0, &controllers);
+    for (int j = 0; j < N; j++) {
+      buf[j] >>= 2;
+    }
+    write_data(buf, out, &out_ptr, N);
+  }
+  return out;
+}
+
 void init_synth(void) {
   double sample_rate = 44100.0;
   Freqlut::init(sample_rate);
@@ -68,6 +94,33 @@ void init_synth(void) {
   Exp2::init();
   Log2::init();
 }
+
+static PyObject * render_patchdata_wrapper(PyObject *self, PyObject *args) {
+  int arg2, arg3, arg4, arg5;
+
+  /* Default values. */
+  arg2 = 50; // midi note
+  arg3 = 70; // velocity
+  arg4 = 44100; // samples
+  arg5 = 22050; // keyup sample
+  const char * patch_save;
+  Py_ssize_t count;
+  if (! PyArg_ParseTuple(args, "s#iiii", &patch_save, &count, &arg2, &arg3, &arg4, &arg5)) {
+    return NULL;
+  }
+  short * result;
+  result = render_patchdata((char*)patch_save, arg2, arg3, arg4, arg5);
+
+  // Create a python list of ints (they are signed shorts that come back)
+  PyObject* ret = PyList_New(arg4); // arg4 is samples
+  for (int i = 0; i < arg4; ++i) {
+    PyObject* python_int = Py_BuildValue("i", result[i]);
+    PyList_SetItem(ret, i, python_int);
+  }
+  free(result);
+  return ret;
+}
+
 
 static PyObject * render_wrapper(PyObject *self, PyObject *args) {
   int arg1, arg2, arg3, arg4, arg5;
@@ -93,6 +146,7 @@ static PyObject * render_wrapper(PyObject *self, PyObject *args) {
   free(result);
   return ret;
 }
+
 // return one patch unpacked for sysex
 static PyObject * unpack_wrapper(PyObject *self, PyObject *args) {
   int arg1 = 8; // patch #
@@ -109,6 +163,7 @@ static PyObject * unpack_wrapper(PyObject *self, PyObject *args) {
 
 static PyMethodDef DX7Methods[] = {
  {"render", render_wrapper, METH_VARARGS, "Render audio"},
+ {"render_patchdata", render_patchdata_wrapper, METH_VARARGS, "Render audio via patch data"},
  {"unpack", unpack_wrapper, METH_VARARGS, "Unpack patch"},
  { NULL, NULL, 0, NULL }
 };

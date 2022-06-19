@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <stdio.h>
 #ifdef VERBOSE
 #include <iostream>
 #endif
@@ -131,6 +131,7 @@ static const uint8_t pitchmodsenstab[] = {
 void Dx7Note::init(const char patch[156], int midinote, int velocity) {
   int rates[4];
   int levels[4];
+
   for (int op = 0; op < 6; op++) {
     int off = op * 21;
     for (int i = 0; i < 4; i++) {

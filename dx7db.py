@@ -41,10 +41,13 @@ def parse_8208b(buf):
 
 
 
-def sysex_message(patch_number, channel):
+def sysex_message(patch, channel):
     import dx7
     # get the 155 bytes for the patch number from the C extension
-    patch_data = dx7.unpack(patch_number)
+    if(type(patch)==int):
+        patch_data = dx7.unpack(patch)
+    else:
+        patch_data = patch
     # generate the twos complement checksum for the patch data 
     # from these dudes fighting w/ each other about who has the best programming skills sigh 
     # https://yamahamusicians.com/forum/viewtopic.php?t=6864
@@ -52,19 +55,19 @@ def sysex_message(patch_number, channel):
 
     # Generate the sysex message
     byte_count = 155 # always 155 bytes of patch information (the operator-on message is only for live mode)
-    msb = byte_count / 127
+    msb = int(byte_count / 127)
     lsb = (byte_count % 127) - 1
     return [0x43, channel, 0, msb, lsb] + patch_data + [check]
 
 _port = mido.open_output()
-def update_voice(patch_number, channel):
-    sysex = sysex_message(patch_number, channel)
+def update_voice(patch, channel):
+    sysex = sysex_message(patch, channel)
     msg = mido.Message('sysex', data=sysex)
     #_port.send(program)
     _port.send(msg)
 
 def play_note(note, channel):
-    msg = mido.Message('note_on', note=note, channel=channel)
+    msg = mido.Message('note_on', note=note, velocity=127,channel=channel)
     _port.send(msg)
 def stop_note(note,channel):
     msg = mido.Message('note_off',note=note, channel = channel, velocity=0)
@@ -175,7 +178,7 @@ def main():
         names.write('\n')
     compact.close()
     names.close()
-    print "Wrote %d patches to compact.bin & names.txt" % (len(dedup.items()))
+    print("Wrote %d patches to compact.bin & names.txt" % (len(dedup.items())))
 
 if __name__ == "__main__":
     main()

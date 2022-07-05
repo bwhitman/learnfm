@@ -4,9 +4,10 @@ import os, sys, hashlib
 import mido
 
 # I got this by paying $2 for https://gumroad.com/dxsysex
-def get_all_syx_files():
+# the default ones were all at https://yamahablackboxes.com/collection/yamaha-dx7-synthesizer/patches/#factory
+def get_all_syx_files(dir):
     sysexs = []
-    for path, directories, files in os.walk('patches'):
+    for path, directories, files in os.walk(dir):
         for file in files:
             d = os.path.join(path, file)
             if d.endswith("syx") or d.endswith("SYX"):
@@ -73,32 +74,12 @@ def stop_note(note,channel):
     msg = mido.Message('note_off',note=note, channel = channel, velocity=0)
     _port.send(msg)
 
-def parse_all():
-    all_files = get_all_syx_files()
-    all_patches =[]
-    total = 0
-    cant = 0
-    dedup = {}
-    for i,f in enumerate(all_files):
-        data = bytearray(open(f, 'rb').read())
-        if(len(data) == 4104):
-            p = parse_4104b(data)
-        elif(len(data) == 4096):
-            p = parse_4096b(data)
-        elif(len(data) == 8208):
-            p = parse_8208b(data)
-        else:
-            cant = cant + 1
-        for patch in p:
-            total = total + 1
-            dedup[patch[2]] = patch
-    return dedup
 
 def unpack_packed_patch(p):
     # Input is a 128 byte thing from compact.bin
     # Output is a 156 byte thing that the synth knows about
     o = [0]*156
-    for op in xrange(6):
+    for op in range(6):
         o[op*21:op*21 + 11] = p[op*17:op*17+11]
         leftrightcurves = p[op*17+11]
         o[op * 21 + 11] = leftrightcurves & 3
@@ -146,11 +127,38 @@ def unpack_packed_patch(p):
         126, 126, 126, 126, 126, 126, 126, 126, 126, 126, # name
         127 # operator on/off
     ]
-    for i in xrange(156):
+    for i in range(156):
         if(o[i] > maxes[i]): o[i] = maxes[i]
         if(o[i] < 0): o[i] = 0
     return o
 
+
+def parse_all(do_dedup=True, folder='/Users/bwhitman/outside/learnfm/default'):
+    all_files = sorted(get_all_syx_files(folder))
+    all_patches =[]
+    total = 0
+    cant = 0
+    if(do_dedup):
+        dedup = {}
+    else:
+        dedup = []
+    for i,f in enumerate(all_files):
+        data = bytearray(open(f, 'rb').read())
+        if(len(data) == 4104):
+            p = parse_4104b(data)
+        elif(len(data) == 4096):
+            p = parse_4096b(data)
+        elif(len(data) == 8208):
+            p = parse_8208b(data)
+        else:
+            cant = cant + 1
+        for patch in p:
+            total = total + 1
+            if(do_dedup):
+                dedup[patch[2]] = patch
+            else:
+                dedup.append(bytes(unpack_packed_patch(patch[0])))
+    return dedup
 def convert_compact_to_unpacked():
     # Take a compact.bin and make it unpacked.bin
     f = bytearray(open("compact.bin").read())
